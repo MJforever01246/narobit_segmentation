@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		12E394427A1206BB761DB4E1 /* Pods_YOLOv8_seg_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E3EDCF0AADD2876C37864A /* Pods_YOLOv8_seg_iOS.framework */; };
 		156AB2862D3CFD6300A8B671 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156AB2852D3CFD6300A8B671 /* CameraView.swift */; };
-		156AB28B2D3D414600A8B671 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 156AB28A2D3D414600A8B671 /* LaunchScreen.storyboard */; };
+		156AB28E2D3D4EE300A8B671 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 156AB28D2D3D4EE300A8B671 /* LaunchScreen.storyboard */; };
 		EA33A2032A24BEC300B32B68 /* CGImage+pixelBufferFromCGImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA33A2022A24BEC300B32B68 /* CGImage+pixelBufferFromCGImage.swift */; };
 		EA3CBB712A31F1C00037750B /* Array+Subscript.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3CBB702A31F1C00037750B /* Array+Subscript.swift */; };
 		EA46C0172BACA3DD00E149F3 /* coco128-yolov8n-seg.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA46C0162BACA3DD00E149F3 /* coco128-yolov8n-seg.mlpackage */; settings = {ATTRIBUTES = (codegen, ); }; };
@@ -41,7 +41,8 @@
 		103744738F5F97453424412D /* Pods-YOLOv8-seg-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-YOLOv8-seg-iOS.debug.xcconfig"; path = "Target Support Files/Pods-YOLOv8-seg-iOS/Pods-YOLOv8-seg-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		156AB2852D3CFD6300A8B671 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		156AB2872D3D00AD00A8B671 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		156AB28A2D3D414600A8B671 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		156AB28C2D3D4EE300A8B671 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		156AB28F2D3D4EE300A8B671 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/LaunchScreen.xcstrings; sourceTree = "<group>"; };
 		53E3EDCF0AADD2876C37864A /* Pods_YOLOv8_seg_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_YOLOv8_seg_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA33A2022A24BEC300B32B68 /* CGImage+pixelBufferFromCGImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGImage+pixelBufferFromCGImage.swift"; sourceTree = "<group>"; };
 		EA3CBB702A31F1C00037750B /* Array+Subscript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Subscript.swift"; sourceTree = "<group>"; };
@@ -233,7 +234,7 @@
 				EA95A3D62A169BE300FF01B3 /* ContentViewModel.swift */,
 				EAF9F1E02A168CC600D3DF49 /* Assets.xcassets */,
 				EAF9F1E22A168CC600D3DF49 /* Preview Content */,
-				156AB28A2D3D414600A8B671 /* LaunchScreen.storyboard */,
+				156AB28D2D3D4EE300A8B671 /* LaunchScreen.storyboard */,
 			);
 			path = "YOLOv8-seg-iOS";
 			sourceTree = "<group>";
@@ -312,7 +313,7 @@
 				EA786B8A2D075757005FB35E /* coco128-yolo11n-seg_float16.tflite in Resources */,
 				EA46C0192BACA3FF00E149F3 /* coco128-yolov8n-seg.torchscript.ptl in Resources */,
 				EAF9F1E12A168CC600D3DF49 /* Assets.xcassets in Resources */,
-				156AB28B2D3D414600A8B671 /* LaunchScreen.storyboard in Resources */,
+				156AB28E2D3D4EE300A8B671 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,6 +373,18 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		156AB28D2D3D4EE300A8B671 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				156AB28C2D3D4EE300A8B671 /* Base */,
+				156AB28F2D3D4EE300A8B671 /* mul */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		EAF9F1E52A168CC600D3DF49 /* Debug */ = {
@@ -507,7 +520,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "YOLOv8-seg-iOS/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Narobit Segmentation Demo";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = YES;
 				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "";
@@ -548,7 +561,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "YOLOv8-seg-iOS/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_CFBundleDisplayName = "Narobit Segmentation Demo";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = YES;
 				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "";
