@@ -20,35 +20,58 @@ struct ContentView: View {
     @State var presentMaskPreview: Bool = false
     @State private var isPresentingCamera: Bool = false
     @State private var isCameraReady: Bool = false
+    @State private var isCameraActive = false
+    @State private var zoomFactor: CGFloat = 1.0
+
+
+        
     
     var body: some View {
         ZStack {
-                VStack(spacing: 8) {
-                    imageView
-                    
-                    settingsForm
-                        .padding(.horizontal)
-                        .padding(.top, 32)
-                    
-                    Spacer()
-                }
-                .background(Color(UIColor.systemGroupedBackground))
-                .sheet(isPresented: $presentMaskPreview) {
-                            buildMasksSheet()
-                        }
-                // Open Camera
-                if viewModel.showCamera {
+            VStack(spacing: 8) {
+                imageView
+
+                settingsForm
+                    .padding(.horizontal)
+                    .padding(.top, 32)
+
+                Spacer()
+            }
+            .background(Color(UIColor.systemGroupedBackground))
+            .sheet(isPresented: $presentMaskPreview) {
+                buildMasksSheet()
+            }
+
+            // Camera view với các thành phần UI
+            if isCameraActive {
+                ZStack {
+                    // Camera view
                     CameraView(imageHandler: { image in
-                        if let unwrappedImage = image {
-                            viewModel.processImage(unwrappedImage)
+                        viewModel.uiImage = image
+                        isCameraActive = false
+                    }, isCameraReady: $isCameraReady, zoomFactor: $zoomFactor)
+                        .edgesIgnoringSafeArea(.all)
+                        .transition(.opacity)
+                    VStack {
+                        HStack {
+                            Text("Zoom: \(String(format: "%.1fx", zoomFactor))")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.black.opacity(0.5))
+                                .cornerRadius(8)
+                                .padding(.leading)
+                            Spacer()
                         }
-                        viewModel.showCamera = false
-                    }, isCameraReady: $isCameraReady)
-                    .edgesIgnoringSafeArea(.all)
-                    .transition(.opacity)
+                        Spacer()
+                    }
+
                 }
             }
+        }
     }
+
+
     
     var imageView: some View {
         Group {
@@ -81,9 +104,8 @@ struct ContentView: View {
                     selection: $viewModel.imageSelection,
                     matching: .images)
                 Button("Open Camera") {
-                    if !viewModel.showCamera {
-                        viewModel.showCamera = true
-                    }
+                    isCameraActive = true
+
                 }
             }
             
