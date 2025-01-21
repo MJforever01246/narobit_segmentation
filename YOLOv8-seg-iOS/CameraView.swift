@@ -12,11 +12,10 @@ import AVFoundation
 struct CameraView: UIViewControllerRepresentable {
     var imageHandler: (UIImage?) -> Void
     @Binding var isCameraReady: Bool
-    @Binding var zoomFactor: CGFloat // Thêm zoomFactor để điều chỉnh zoom
     
 
     func makeUIViewController(context: Context) -> CameraViewController {
-        let controller = CameraViewController(isCameraReady: $isCameraReady, zoomFactor: $zoomFactor)
+        let controller = CameraViewController(isCameraReady: $isCameraReady)
         controller.imageHandler = imageHandler
         return controller
     }
@@ -26,19 +25,31 @@ struct CameraView: UIViewControllerRepresentable {
 
 class CameraViewController: UIViewController {
     var captureSession: AVCaptureSession?
-        var photoOutput = AVCapturePhotoOutput()
-        var previewLayer: AVCaptureVideoPreviewLayer?
+    var photoOutput = AVCapturePhotoOutput()
+    var previewLayer: AVCaptureVideoPreviewLayer?
+    
+    var zoomFactor: CGFloat = 5.0
+    
+    let zoomLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        label.textAlignment = .center
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
+        label.frame = CGRect(x: 16, y: 50, width: 120, height: 30)
+        return label
+    }()
+    
+    var imageHandler: ((UIImage?) -> Void)?
+    
+    @Binding var isCameraReady: Bool
 
-        var imageHandler: ((UIImage?) -> Void)?
-        
-        @Binding var isCameraReady: Bool
-        @Binding var zoomFactor: CGFloat
-
-        init(isCameraReady: Binding<Bool>, zoomFactor: Binding<CGFloat>) {
-            _isCameraReady = isCameraReady
-            _zoomFactor = zoomFactor
-            super.init(nibName: nil, bundle: nil)
-        }
+    init(isCameraReady: Binding<Bool>) {
+        _isCameraReady = isCameraReady
+        super.init(nibName: nil, bundle: nil)
+    }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -48,10 +59,11 @@ class CameraViewController: UIViewController {
         super.viewDidLoad()
         setupCamera()
         setupOverlay()
-        
-        let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
-            view.addGestureRecognizer(pinchGestureRecognizer)
 
+//        let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
+//        view.addGestureRecognizer(pinchGestureRecognizer)
+        let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
+        view.addGestureRecognizer(pinchGestureRecognizer)
     }
 
     func setupCamera() {
@@ -85,7 +97,8 @@ class CameraViewController: UIViewController {
 
             session.startRunning()
 
-            // Thêm overlay sau khi camera được thiết lập
+            try setZoomFactor(to: 5)
+
             setupOverlay()
 
             DispatchQueue.main.async {
@@ -96,56 +109,68 @@ class CameraViewController: UIViewController {
         }
     }
 
+        func setZoomFactor(to factor: CGFloat) throws {
+        guard let deviceInput = captureSession?.inputs.first as? AVCaptureDeviceInput else {
+            throw NSError(domain: "Camera", code: -1, userInfo: [NSLocalizedDescriptionKey: "Camera device not found"])
+        }
+        let device = deviceInput.device
+        try device.lockForConfiguration()
+        device.videoZoomFactor = max(1.0, min(factor, device.activeFormat.videoMaxZoomFactor))
+        device.unlockForConfiguration()
+    }
+
+    
+    func updateZoomLabel() {
+        zoomLabel.text = "Zoom: \(String(format: "%.1fx", zoomFactor))"
+    }
 
     func setupOverlay() {
-            // Xóa các overlay cũ (nếu có)
-            view.layer.sublayers?.removeAll(where: { $0 is CAShapeLayer })
-            view.subviews.forEach { $0.removeFromSuperview() }
+        
+        view.layer.sublayers?.removeAll(where: { $0 is CAShapeLayer })
+        view.subviews.forEach { $0.removeFromSuperview() }
 
-            // Tạo một CAShapeLayer để vẽ hai đường
-            let overlayLayer = CAShapeLayer()
-            overlayLayer.frame = view.bounds
-            overlayLayer.strokeColor = UIColor.red.cgColor
-            overlayLayer.lineWidth = 10.0
+        let overlayLayer = CAShapeLayer()
+        overlayLayer.frame = view.bounds
+        overlayLayer.strokeColor = UIColor.red.cgColor
+        overlayLayer.lineWidth = 10.0
 
-            let overlayPath = UIBezierPath()
-            let spacing: CGFloat = view.bounds.width * 0.55
+        let overlayPath = UIBezierPath()
+        let spacing: CGFloat = view.bounds.width * 0.55
 
-            // Tính toán vị trí của hai đường thẳng
-            let firstLineX = view.bounds.width / 2 - spacing / 2
-            let secondLineX = view.bounds.width / 2 + spacing / 2
+        let firstLineX = view.bounds.width / 2 - spacing / 2
+        let secondLineX = view.bounds.width / 2 + spacing / 2
 
-            // Vẽ đường đầu tiên
-            overlayPath.move(to: CGPoint(x: firstLineX, y: 0))
-            overlayPath.addLine(to: CGPoint(x: firstLineX, y: view.bounds.height))
+        overlayPath.move(to: CGPoint(x: firstLineX, y: 0))
+        overlayPath.addLine(to: CGPoint(x: firstLineX, y: view.bounds.height))
 
-            // Vẽ đường thứ hai
-            overlayPath.move(to: CGPoint(x: secondLineX, y: 0))
-            overlayPath.addLine(to: CGPoint(x: secondLineX, y: view.bounds.height))
+        overlayPath.move(to: CGPoint(x: secondLineX, y: 0))
+        overlayPath.addLine(to: CGPoint(x: secondLineX, y: view.bounds.height))
 
-            // Gán đường dẫn vào layer
-            overlayLayer.path = overlayPath.cgPath
-
-            // Thêm layer vào view camera
-            view.layer.addSublayer(overlayLayer)
-
-
-            
-            let captureButton = UIButton(type: .custom)
-            captureButton.frame = CGRect(x: (view.frame.width - 70) / 2, y: view.frame.height - 100, width: 70, height: 70)
-            captureButton.backgroundColor = .white
-            captureButton.layer.cornerRadius = 35
-            captureButton.layer.borderWidth = 2
-            captureButton.layer.borderColor = UIColor.gray.cgColor
-            captureButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
-            view.addSubview(captureButton)
-
-            
-            let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinchGesture(_:)))
-            view.addGestureRecognizer(pinchGesture)
-        }
-
-
+        overlayLayer.path = overlayPath.cgPath
+        view.layer.addSublayer(overlayLayer)
+        
+//        let zoomLabel = UILabel()
+//        zoomLabel.text = "Zoom: \(String(format: "%.1fx", zoomFactor))"
+//        zoomLabel.textColor = .white
+//        zoomLabel.font = UIFont.boldSystemFont(ofSize: 16)
+//        zoomLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+//        zoomLabel.textAlignment = .center
+//        zoomLabel.layer.cornerRadius = 8
+//        zoomLabel.clipsToBounds = true
+//        zoomLabel.frame = CGRect(x: 16, y: 50, width: 120, height: 30)
+//        view.addSubview(zoomLabel)
+        view.addSubview(zoomLabel)
+        updateZoomLabel()
+        
+        let captureButton = UIButton(type: .custom)
+        captureButton.frame = CGRect(x: (view.frame.width - 70) / 2, y: view.frame.height - 100, width: 70, height: 70)
+        captureButton.backgroundColor = .white
+        captureButton.layer.cornerRadius = 35
+        captureButton.layer.borderWidth = 2
+        captureButton.layer.borderColor = UIColor.gray.cgColor
+        captureButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
+        view.addSubview(captureButton)
+    }
 
     @objc func handlePinchGesture(_ gesture: UIPinchGestureRecognizer) {
         guard let deviceInput = captureSession?.inputs.first as? AVCaptureDeviceInput else { return }
@@ -155,20 +180,18 @@ class CameraViewController: UIViewController {
             do {
                 try device.lockForConfiguration()
 
-                
+                // Zoom the camera preview only
                 let newZoomFactor = max(1.0, min(device.videoZoomFactor * gesture.scale, device.activeFormat.videoMaxZoomFactor))
-
-
+                device.videoZoomFactor = newZoomFactor
                 zoomFactor = newZoomFactor
 
-                // Áp dụng zoom mới cho camera
-                device.videoZoomFactor = newZoomFactor
-
-                // Mở khóa cấu hình sau khi thay đổi
-                device.unlockForConfiguration()
-
-                // Đặt lại scale của gesture để tránh hiệu ứng lặp
                 gesture.scale = 1.0
+
+                DispatchQueue.main.async {
+                    self.updateZoomLabel()
+                }
+
+                device.unlockForConfiguration()
             } catch {
                 print("Error setting zoom factor: \(error)")
             }
@@ -176,23 +199,9 @@ class CameraViewController: UIViewController {
     }
 
 
-
-
     @objc func capturePhoto() {
         let photoSettings = AVCapturePhotoSettings()
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
-    }
-
-    func updateZoom(_ factor: CGFloat) {
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
-
-        do {
-            try device.lockForConfiguration()
-            device.videoZoomFactor = max(1.0, min(factor, device.activeFormat.videoMaxZoomFactor))
-            device.unlockForConfiguration()
-        } catch {
-            print("Failed to update zoom: \(error)")
-        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -213,6 +222,7 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
         }
     }
 }
+
 
 class OverlayView: UIView {
     override func draw(_ rect: CGRect) {

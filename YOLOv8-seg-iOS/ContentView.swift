@@ -21,7 +21,7 @@ struct ContentView: View {
     @State private var isPresentingCamera: Bool = false
     @State private var isCameraReady: Bool = false
     @State private var isCameraActive = false
-    @State private var zoomFactor: CGFloat = 1.0
+    @State private var zoomFactor: CGFloat = 5.0
 
 
         
@@ -47,24 +47,27 @@ struct ContentView: View {
                 ZStack {
                     // Camera view
                     CameraView(imageHandler: { image in
+                        viewModel.predictions = []
+                        viewModel.maskPredictions = []
+                        viewModel.combinedMaskImage = nil
                         viewModel.uiImage = image
                         isCameraActive = false
-                    }, isCameraReady: $isCameraReady, zoomFactor: $zoomFactor)
+                    }, isCameraReady: $isCameraReady)
                         .edgesIgnoringSafeArea(.all)
                         .transition(.opacity)
-                    VStack {
-                        HStack {
-                            Text("Zoom: \(String(format: "%.1fx", zoomFactor))")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding(8)
-                                .background(Color.black.opacity(0.5))
-                                .cornerRadius(8)
-                                .padding(.leading)
-                            Spacer()
-                        }
-                        Spacer()
-                    }
+//                    VStack {
+//                        HStack {
+//                            Text("Zoom: \(String(format: "%.1fx", zoomFactor))")
+//                                .font(.headline)
+//                                .foregroundColor(.white)
+//                                .padding(8)
+//                                .background(Color.black.opacity(0.5))
+//                                .cornerRadius(8)
+//                                .padding(.leading)
+//                            Spacer()
+//                        }
+//                        Spacer()
+//                    }
 
                 }
             }
@@ -96,6 +99,30 @@ struct ContentView: View {
         .frame(maxHeight: 400)
     }
     
+    var fixedImageView: some View {
+        Group {
+            if let uiImage = viewModel.uiImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .antialiased(false)
+                    .interpolation(.none)
+                    .aspectRatio(contentMode: .fit)
+
+            } else {
+                Color
+                    .gray
+                    .aspectRatio(contentMode: .fit)
+            }
+        }
+        .overlay(
+            buildMaskImage(mask: viewModel.combinedMaskImage)
+                .opacity(showMasks ? 0.5 : 0))
+        .overlay(
+            DetectionViewRepresentable(
+                predictions: $viewModel.predictions)
+            .opacity(showBoxes ? 1 : 0))
+        .frame(width: 960, height: 960)      }
+    
     var settingsForm: some View {
         Form {
             Section {
@@ -105,6 +132,18 @@ struct ContentView: View {
                     matching: .images)
                 Button("Open Camera") {
                     isCameraActive = true
+
+                }
+                SaveButtonView(buttonTitle: "Save Image" ) {
+                    if (viewModel.processing || viewModel.uiImage == nil) {return;};
+                    let size = CGSize(width: 960, height: 960)
+                    if let renderedImage = convertViewToImage(swiftUIView: fixedImageView, size: size) {
+
+                        UIImageWriteToSavedPhotosAlbum(renderedImage, nil, nil, nil)
+                        print("Image saved successfully!")
+                    } else {
+                        print("Failed to render image.")
+                    }
 
                 }
             }
@@ -175,19 +214,7 @@ struct ContentView: View {
                         presentMaskPreview.toggle()
                     }
                     
-                    SaveButtonView(buttonTitle: "Save Image") {
-
-                        let size = CGSize(width: 400, height: 400)
-                        if let renderedImage = convertViewToImage(swiftUIView: imageView, size: size) {
-
-                            UIImageWriteToSavedPhotosAlbum(renderedImage, nil, nil, nil)
-                            print("Image saved successfully!")
-                        } else {
-                            print("Failed to render image.")
-                        }
-                    }
-
-
+                    
                 }
                 
             }
@@ -269,6 +296,40 @@ struct ContentView: View {
             UIApplication.shared.open(url)
         }
     }
+    
+    func convertViewToImageWithFixedSize<T: View>(
+        swiftUIView: T,
+        canvasSize: CGSize,
+        imageSize: CGSize
+    ) -> UIImage? {
+        // Tạo hosting controller cho SwiftUI view
+        let hostingController = UIHostingController(rootView: swiftUIView)
+        let view = hostingController.view
+        view?.bounds = CGRect(origin: .zero, size: canvasSize)
+        view?.backgroundColor = .clear
+
+        // Tạo renderer
+        let renderer = UIGraphicsImageRenderer(size: canvasSize)
+        return renderer.image { context in
+            // Đặt nền canvas màu trắng
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: canvasSize))
+
+            // Tính toán tỷ lệ và vị trí để vẽ ảnh gốc (uiImage)
+            let scale = min(canvasSize.width / imageSize.width, canvasSize.height / imageSize.height)
+            let scaledImageSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+            let origin = CGPoint(
+                x: (canvasSize.width - scaledImageSize.width) / 2,
+                y: (canvasSize.height - scaledImageSize.height) / 2
+            )
+
+            // Vẽ ảnh gốc tại vị trí và kích thước đã tính toán
+            if let currentImageView = view {
+                currentImageView.layer.render(in: context.cgContext)
+            }
+        }
+    }
+
 
 
 }
@@ -301,47 +362,38 @@ struct SaveButtonView: View {
             handleSaveButton()
         }) {
             if isLoading {
-                
                 HStack {
                     ProgressView()
                     Text("Loading...")
                         .foregroundColor(.gray)
                 }
-
                 .background(Color.white)
                 .cornerRadius(5)
             } else if isSaveDone {
-
                 Text("Save Done")
                     .foregroundColor(.green)
-
                     .background(Color.white)
                     .cornerRadius(5)
             } else {
-
                 Text(buttonTitle)
                     .foregroundColor(.blue)
-
                     .background(Color.white)
                     .cornerRadius(5)
             }
         }
-        .disabled(isButtonDisabled) 
+        .disabled(isLoading || isSaveDone || isButtonDisabled)  // Disable button if loading, save done, or button is manually disabled
     }
     
     private func handleSaveButton() {
         isLoading = true
         isButtonDisabled = true
-        
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-
+            // Call the action passed from outside
             action()
-            
 
             isLoading = false
             isSaveDone = true
-            
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isSaveDone = false
@@ -350,3 +402,4 @@ struct SaveButtonView: View {
         }
     }
 }
+
