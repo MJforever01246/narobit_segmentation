@@ -149,16 +149,6 @@ class CameraViewController: UIViewController {
         overlayLayer.path = overlayPath.cgPath
         view.layer.addSublayer(overlayLayer)
         
-//        let zoomLabel = UILabel()
-//        zoomLabel.text = "Zoom: \(String(format: "%.1fx", zoomFactor))"
-//        zoomLabel.textColor = .white
-//        zoomLabel.font = UIFont.boldSystemFont(ofSize: 16)
-//        zoomLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-//        zoomLabel.textAlignment = .center
-//        zoomLabel.layer.cornerRadius = 8
-//        zoomLabel.clipsToBounds = true
-//        zoomLabel.frame = CGRect(x: 16, y: 50, width: 120, height: 30)
-//        view.addSubview(zoomLabel)
         view.addSubview(zoomLabel)
         updateZoomLabel()
         
@@ -223,32 +213,4 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
     }
 }
 
-
-class OverlayView: UIView {
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
-
-        guard let context = UIGraphicsGetCurrentContext() else { return }
-
-        // Màu của đường
-        context.setStrokeColor(UIColor.red.cgColor)
-        context.setLineWidth(10.0)
-
-        // Tính toán vị trí 2 đường thẳng dọc
-        let spacing: CGFloat = rect.width * 0.3
-        let firstLineX = rect.width / 2 - spacing / 2
-        let secondLineX = rect.width / 2 + spacing / 2
-
-        // Vẽ đường đầu tiên
-        context.move(to: CGPoint(x: firstLineX, y: 0))
-        context.addLine(to: CGPoint(x: firstLineX, y: rect.height))
-
-        // Vẽ đường thứ hai
-        context.move(to: CGPoint(x: secondLineX, y: 0))
-        context.addLine(to: CGPoint(x: secondLineX, y: rect.height))
-
-        // Render các đường
-        context.strokePath()
-    }
-}
 

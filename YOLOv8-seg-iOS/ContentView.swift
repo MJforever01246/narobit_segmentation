@@ -42,7 +42,6 @@ struct ContentView: View {
                 buildMasksSheet()
             }
 
-            // Camera view với các thành phần UI
             if isCameraActive {
                 ZStack {
                     // Camera view
@@ -55,20 +54,6 @@ struct ContentView: View {
                     }, isCameraReady: $isCameraReady)
                         .edgesIgnoringSafeArea(.all)
                         .transition(.opacity)
-//                    VStack {
-//                        HStack {
-//                            Text("Zoom: \(String(format: "%.1fx", zoomFactor))")
-//                                .font(.headline)
-//                                .foregroundColor(.white)
-//                                .padding(8)
-//                                .background(Color.black.opacity(0.5))
-//                                .cornerRadius(8)
-//                                .padding(.leading)
-//                            Spacer()
-//                        }
-//                        Spacer()
-//                    }
-
                 }
             }
         }
@@ -264,10 +249,10 @@ struct ContentView: View {
     }
     
     private func saveImageToGallery(_ image: UIImage) {
-        // Kiểm tra quyền truy cập thư viện ảnh
+        
         PHPhotoLibrary.requestAuthorization { status in
             if status == .authorized {
-                // Lưu ảnh vào thư viện ảnh
+        
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
             } else {
                 
@@ -381,7 +366,7 @@ struct SaveButtonView: View {
                     .cornerRadius(5)
             }
         }
-        .disabled(isLoading || isSaveDone || isButtonDisabled)  // Disable button if loading, save done, or button is manually disabled
+        .disabled(isLoading || isSaveDone || isButtonDisabled)  //
     }
     
     private func handleSaveButton() {
@@ -389,7 +374,7 @@ struct SaveButtonView: View {
         isButtonDisabled = true
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Call the action passed from outside
+            
             action()
 
             isLoading = false
